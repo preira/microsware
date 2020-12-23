@@ -4,6 +4,7 @@ import nconf from 'nconf'
 import { Configuration } from './configuration/configuration'
 import { API } from './api/api'
 import { Logger, MSWLogger } from './log/logger'
+import { transaction } from './transaction/transaction'
 
 /* TODO: 
   consider to export an interface as a contract for
@@ -41,9 +42,12 @@ export class MSWService {
     }
 
     this.server = new API(this.config, this.logger('microsware-api'))
+    //TODO: get a way of setting a new transaction
+    this.server.use(transaction)
     //TODO: configure serve to:
-      //TODO: treat authorization
-      //TODO: treat transation
+    //this.server.use > auth > transaction
+    // TODO: treat authorization (needs paths )
+    // this.server.use(authorization)
       //TODO: log
       //TODO: 
 

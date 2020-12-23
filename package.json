@@ -1,6 +1,6 @@
 {
   "name": "microsware",
-  "version": "0.1.0",
+  "version": "0.1.draft",
   "description": "Microservice middleware in nodejs server",
   "main": "service.js",
   "scripts": {

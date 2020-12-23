@@ -2,10 +2,10 @@ import { LogConfig } from "../configuration/configuration";
 import debug from 'debug'
 
 export interface Logger {
-    info(formatter: string, args: any[]) : void
-    warn(formatter: string, args: any[]) : void
-    debug(formatter: string, args: any[]) : void
-    trace(formatter: string, args: any[]) : void
+    info(formatter: string, args? : any[]) : void
+    warn(formatter: string, args? : any[]) : void
+    debug(formatter: string, args? : any[]) : void
+    trace(formatter: string, args? : any[]) : void
 }
 
 export class MSWLogger implements Logger{
@@ -24,25 +24,25 @@ export class MSWLogger implements Logger{
         return this
     }
 
-    async info(formatter: string, args: any[]) {
+    async info(formatter: string, args? : any[]) {
         this.logger(formatter, args)
     }
     
-    async warn(formatter: string, args: any[]) {
+    async warn(formatter: string, args? : any[]) {
         if (this.config.isWarn || this.config.isDebug || this.config.isTrace)
         {
             this.logger(`[Warn@${this.timestamp()}] ${formatter}`, args)
         }
     }
 
-    async debug(formatter: string, args: any[]) {
+    async debug(formatter: string, args? : any[]) {
         if (this.config.isDebug || this.config.isTrace)
         {
             this.logger(`[Debug@${this.timestamp()}] ${formatter}`, args)
         }
     }
 
-    async trace(formatter: string, args: any[]) {
+    async trace(formatter: string, args? : any[]) {
         if (this.config.isTrace)
         {
             this.logger(`[Trace@${this.timestamp()}] ${formatter}`, args)
