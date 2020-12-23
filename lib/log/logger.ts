@@ -9,10 +9,19 @@ export interface Logger {
 }
 
 export class MSWLogger implements Logger{
-    logger: any
-    config
-    constructor(conf: LogConfig) {
-        this.config = conf
+    logger : any
+    config : LogConfig
+    constructor(namespace: string, conf? : LogConfig) {
+        this.logger = debug(namespace)
+        if (conf)
+        {
+            this.config = conf
+        }
+        else{
+            this.config = {
+
+            }
+        }
 
         //TODO: allow injecting logger
         //TODO: add log to server (send event)

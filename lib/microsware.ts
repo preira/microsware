@@ -16,6 +16,7 @@ import { transaction } from './transaction/transaction'
 export interface Service {
   api() : API
   logger(namespace: string) : Logger
+  run() : void
 }
 
 export class MSWService implements Service {
@@ -61,7 +62,7 @@ export class MSWService implements Service {
   }
 
   logger(namespace: string) : Logger {
-    return new MSWLogger(this.config.log).init(namespace)
+    return new MSWLogger(namespace, this.config.log)
   }
 
   /*
