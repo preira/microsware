@@ -1,4 +1,3 @@
-import express from 'express'
 import nconf from 'nconf'
 import { Configuration } from './configuration/configuration'
 import { API } from './api/api'

@@ -1,37 +1,37 @@
 
 
 export interface Configuration {
-    node : {
-        environment: string
+    node? : {
+        environment : string
     }
 
-    database: {
-        host: string,
-        database: string,
-        user: string,
-        password: string,
-        port: number
+    database? : {
+        host : string,
+        database : string,
+        user : string,
+        password : string,
+        port : number
     }
     
-    server: {
-        httpport: number
-        ip: number
+    server : {
+        httpport : number
+        hostname? : number
     }
     
-    batchService:  {
-        baseDir: string,
-        scanInterval_ms: number,
-        namePattern: string
+    batchService? :  {
+        baseDir : string,
+        scanInterval_ms : number,
+        namePattern : string
     }
     
-    log: LogConfig
+    log? : LogConfig
 }
 
 export interface LogConfig {
-    isDebug: boolean
-    isTrace: boolean
-    isWarn: boolean
-    isLocalOnly: boolean
+    isDebug? : boolean
+    isTrace? : boolean
+    isWarn? : boolean
+    isLocalOnly? : boolean
 }
 
 /*
