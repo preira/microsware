@@ -34,6 +34,14 @@ export class API {
     route(path: string) {
         return new MSWRoute(path, this.server)
     }
+
+    run() {
+        // rest of the code remains same
+        this.server.listen(this.config.server.httpport, () => {
+          console.log(`⚡️[server]: Server now is running at https://${this.config.server.ip}:${this.config.server.httpport}`);
+        })
+      }
+    
 }
 
 /**

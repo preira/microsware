@@ -1,4 +1,3 @@
-/** https://blog.logrocket.com/typescript-with-node-js-and-express/ **/
 import express from 'express'
 import nconf from 'nconf'
 import { Configuration } from './configuration/configuration'
@@ -20,13 +19,13 @@ export interface Service {
   logger(namespace: string) : Logger
 }
 
-export class MSWService {
+export class MSWService implements Service {
 
   config : Configuration
   server : API
   NODE_ENV
 
-  constructor(conf: Configuration, logger: any) {
+  constructor(conf: Configuration, logger?: any) {
     this.config = conf
     // Read configurations
     if (conf && conf.node && conf.node.environment)
@@ -97,13 +96,6 @@ export class MSWService {
   }
 
   run() {
-    // rest of the code remains same
-    const server = express()
-    const PORT = 3000
-    server.get('/', (req, res) => res.send('Express + TypeScript Server'));
-    server.listen(PORT, () => {
-      console.log(`⚡️[server]: Server now is running at https://localhost:${PORT}`);
-    })
-    server.get('/example', (req, res)=>res.json({name:"value"}))
+    this.server.run()
   }
 }

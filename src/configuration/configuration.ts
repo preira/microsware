@@ -15,6 +15,7 @@ export interface Configuration {
     
     server: {
         httpport: number
+        ip: number
     }
     
     batchService:  {
