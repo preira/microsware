@@ -1,6 +1,6 @@
 {
   "name": "microsware",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Microservice middleware in nodejs server",
   "main": "/lib/microsware.js",
   "types": "/lib/microsware.d.ts",
@@ -15,7 +15,10 @@
   },
   "author": "João Pereira",
   "license": "ISC",
-  "keywords": ["Microservices", "Middleware"],
+  "keywords": [
+    "Microservices",
+    "Middleware"
+  ],
   "dependencies": {
     "body-parser": "^1.19.0",
     "debug": "^4.3.1",
