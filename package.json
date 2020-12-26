@@ -2,9 +2,10 @@
   "name": "microsware",
   "version": "0.1.4",
   "description": "Microservice middleware in nodejs server",
-  "main": "./lib/microsware.ts",
+  "main": "./dist/lib/microsware.ts",
   "scripts": {
-    "start": "nodemon ./lib/microsware.ts",
+    "prepublish": "npm run build",
+    "build": "tsc",
     "test": "test"
   },
   "author": "João Pereira",
