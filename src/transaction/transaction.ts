@@ -1,5 +1,7 @@
+import { Configuration } from "../configuration/configuration"
 import { TimeoutError } from "../exception/exception"
 
+export const DEFAULT_TX_TIMEOUT = 5*60*1000
 /**
  * A MSW Transaction is a series of service calls and 
  * corresponding responses.
@@ -28,7 +30,7 @@ export class MSWTransation {
     constructor(obj : TransactionObject) {
         this.tx = obj
         this.receptionTimestamp = new Date()
-        this.tx.receivedAt = this.date2string(this.receptionTimestamp)
+        this.tx.receivedAt = date2string(this.receptionTimestamp)
     }
 
     availableTimeout(date : Date = new Date()) : number {
@@ -37,16 +39,6 @@ export class MSWTransation {
             - new Date().getTime()
         if (available < 0) throw new TimeoutError(this.printTimeoutMsg(this.tx, new Date()))
         return available
-    }
-
-    date2string(date : Date) : string {
-        return date.getFullYear + '-' +
-            pad(date.getMonth()+1, 2) + '-' + 
-            pad(date.getDate()+1, 2) + 'T' + 
-            pad(date.getHours()+1, 2) + ':' + 
-            pad(date.getMinutes()+1, 2) + ':' + 
-            pad(date.getSeconds()+1, 2) + '.' + 
-            pad(date.getMilliseconds()+1, 2)
     }
 
     printTimeoutMsg(tx : TransactionObject, timestamp : Date) {
@@ -64,7 +56,7 @@ export class MSWTransation {
             startTime: this.tx.startTime,
             receivedAt: '',
             respondedAt: '',
-            sentAt: this.date2string(timestamp),
+            sentAt: date2string(timestamp),
             availableTimeout: this.availableTimeout(timestamp),
         }
     }
@@ -73,11 +65,23 @@ export class MSWTransation {
         const timestamp = new Date()
         
         this.tx.availableTimeout = this.availableTimeout(timestamp)
-        this.tx.respondedAt = this.date2string(timestamp)
+        this.tx.respondedAt = date2string(timestamp)
         return this.tx
     }
 
 }
+
+function date2string(date : Date) : string {
+    return date.getFullYear + '-' +
+        pad(date.getMonth()+1, 2) + '-' + 
+        pad(date.getDate()+1, 2) + 'T' + 
+        pad(date.getHours()+1, 2) + ':' + 
+        pad(date.getMinutes()+1, 2) + ':' + 
+        pad(date.getSeconds()+1, 2) + '.' + 
+        pad(date.getMilliseconds()+1, 2)
+}
+
+
 
 export interface TransactionObject {
     /** Who sent the message */
@@ -87,11 +91,11 @@ export interface TransactionObject {
     /** Timestamp when transaction was created */
     startTime : string
     /** receiver has received at this timestamp */
-    receivedAt : string
+    receivedAt? : string
     /** receiver has responded at this timestamp */
-    respondedAt : string
+    respondedAt? : string
     /** sender has send at this timestamp */
-    sentAt : string
+    sentAt? : string
     /** remaining timeout */
     availableTimeout : number
 }
@@ -100,14 +104,41 @@ function pad(n : number, digits : number) : string {
     return String(n).padStart(digits, '0')
 }
 
-export function transaction(req : any, res : any, next : any) {
-    const tx : TransactionObject = req.header.mswtransaction
-    const mswTx = new MSWTransation(tx)
+export function transaction(conf : Configuration){
+    return (req : any, res : any, next : any)  => {
+
+        const timestamp = new Date()
+        let tx : TransactionObject
+        const timeout = conf.transaction?.timeout || DEFAULT_TX_TIMEOUT
+
+        if (req.header.mswtransaction)
+        {
+                tx = req.header.mswtransaction
+        }
+        else if (!conf.transaction) 
+        {
+            // No transaction is expected
+            next()
+            return
+        }
+        else
+        {
+            tx = {
+                sender: `${conf.service.name}-${conf.service.uuid}`,
+                receiver: `${conf.service.name}-${conf.service.uuid}`,
+                startTime: date2string(timestamp),
+                availableTimeout : timeout
+            }
+        }
+
+        //TODO: either a running transaction exists or one is created if declared
+        const mswTx = new MSWTransation(tx)
+        
+        req.mswTx = mswTx
     
-    req.mswTx = mswTx
-
-    next()
-
-    //TODO: set transaction in response header
-    res.header.mswtransaction = mswTx.getTx2Respond()
+        next()
+    
+        //TODO: set transaction in response header
+        res.header.mswtransaction = mswTx.getTx2Respond()
+    }
 }

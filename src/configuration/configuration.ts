@@ -1,6 +1,21 @@
-
+/**
+ * service - caracterizes the service
+ *      uuid - should be unique per service instance
+ * node - environment configuration
+ * database - database connection configuration
+ * server - web server configuration
+ * batchService - if service includes batch job
+ * 
+ */
 
 export interface Configuration {
+
+    service : {
+        name : string,
+        version : string,
+        uuid : string
+    }
+
     node? : {
         environment : string
     }
@@ -23,8 +38,14 @@ export interface Configuration {
         scanInterval_ms : number,
         namePattern : string
     }
+
+    transaction? : TransactionConfig
     
     log? : LogConfig
+}
+
+export interface TransactionConfig {
+    timeout : number
 }
 
 export interface LogConfig {

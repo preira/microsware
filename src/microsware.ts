@@ -42,7 +42,7 @@ export class MSWService implements Service {
 
     this.server = new API(this.config, this.logger('microsware-api'))
     //TODO: get a way of setting a new transaction
-    this.server.use(transaction)
+    this.server.use(transaction(conf))
     //TODO: configure serve to:
     //this.server.use > auth > transaction
     // TODO: treat authorization (needs paths )
@@ -54,11 +54,15 @@ export class MSWService implements Service {
 
     // TODO: use configuration
     // TODO: add sanity routes
-    // TODO: initialize batch service
   }
 
   api() : API {
     return this.server
+  }
+
+  async initBatch(worker : () => void) {
+    // TODO: initialize batch service 
+    // TODO: add to interface
   }
 
   logger(namespace: string) : Logger {
