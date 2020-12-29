@@ -1,6 +1,6 @@
 {
   "name": "microsware",
-  "version": "0.1.27",
+  "version": "0.1.28",
   "description": "Microservice middleware in nodejs server",
   "main": "/lib/microsware.js",
   "types": "/lib/microsware.d.ts",
