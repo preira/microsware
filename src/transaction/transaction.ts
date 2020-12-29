@@ -136,6 +136,7 @@ export function transaction(conf : Configuration){
         
         req.mswTx = mswTx
     
+        res.header.mswtransaction = 'PRE SET'
         await next()
     
         //TODO: set transaction in response header
