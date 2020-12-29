@@ -105,7 +105,7 @@ function pad(n : number, digits : number) : string {
 }
 
 export function transaction(conf : Configuration){
-    return (req : any, res : any, next : any)  => {
+    return async (req : any, res : any, next : any)  => {
 
         const timestamp = new Date()
         let tx : TransactionObject
@@ -136,7 +136,7 @@ export function transaction(conf : Configuration){
         
         req.mswTx = mswTx
     
-        next()
+        await next()
     
         //TODO: set transaction in response header
         res.header.mswtransaction = mswTx.getTx2Respond()

@@ -57,7 +57,12 @@ export interface LogConfig {
 
 /*
 {
-    "node" : {
+    "service" : {
+        name : 'TemplateService',
+        version : '0.0.1',
+        uuid : 'XXXX-XXXX-XXXX-XXXX'
+    },
+   "node" : {
         "environment": 'Development'
     },
     "database": {
