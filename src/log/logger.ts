@@ -38,35 +38,39 @@ export class MSWLogger implements Logger{
     }
 
     async info(formatter: string, args? : any[]) {
-        this.logger.log(formatter, args)
+        this.log(formatter, args)
     }
     
     async warn(formatter: string, args? : any[]) {
         if (this.config.isWarn || this.config.isDebug || this.config.isTrace)
         {
-            this.logger.log(`[${this.namespace}:Warn@${this.timestamp()}] ${formatter}`, args)
+            this.log(`[${this.namespace}:Warn@${this.timestamp()}] ${formatter}`, args)
         }
     }
 
     async debug(formatter: string, args? : any[]) {
         if (this.config.isDebug || this.config.isTrace)
         {
-            this.logger.log(`[${this.namespace}:Debug@${this.timestamp()}] ${formatter}`, args)
+            this.log(`[${this.namespace}:Debug@${this.timestamp()}] ${formatter}`, args)
         }
     }
 
     async trace(formatter: string, args? : any[]) {
         if (this.config.isTrace)
         {
-            this.logger.log(`[${this.namespace}:Trace@${this.timestamp()}] ${formatter}`, args)
+            this.log(`[${this.namespace}:Trace@${this.timestamp()}] ${formatter}`, args)
         }
     }
 
     async traceDeferred(callback: () => string) {
         if (this.config.isTrace)
         {
-            this.logger.log(`[${this.namespace}:Trace@${this.timestamp()}] ${callback()}`)
+            this.log(`[${this.namespace}:Trace@${this.timestamp()}] ${callback()}`)
         }
+    }
+
+    log(formatter: string, args? : any[]) {
+        this.logger(formatter, args)
     }
 
     timestamp() {
