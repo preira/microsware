@@ -1,5 +1,4 @@
 import { LogConfig } from "../configuration/configuration";
-import debug from 'debug'
 
 export interface Logger {
     info(formatter: string, args? : any[]) : void
@@ -10,7 +9,7 @@ export interface Logger {
 }
 
 export class MSWLogger implements Logger{
-    logger
+    logger : Console
     namespace : string
     config : LogConfig
     constructor(namespace: string, conf? : LogConfig) {

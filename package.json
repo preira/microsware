@@ -7,6 +7,7 @@
   "scripts": {
     "prepublishOnly": "npm version patch && npm run build",
     "build": "tsc",
+    "testserver": "nodemon ./test/service.ts",
     "test": "test"
   },
   "repository": {
@@ -27,7 +28,16 @@
     "nconf": "^0.11.0"
   },
   "files": [
-    "/lib/**/*"
+    "/lib/*",
+    "/lib/api/*",
+    "/lib/auth/*",
+    "/lib/cache/*",
+    "/lib/configuration/*",
+    "/lib/event/*",
+    "/lib/exception/*",
+    "/lib/log/*",
+    "/lib/sanity/*",
+    "/lib/transation/*"
   ],
   "devDependencies": {
     "@types/debug": "^4.1.5",
