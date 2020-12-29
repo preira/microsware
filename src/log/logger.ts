@@ -10,10 +10,13 @@ export interface Logger {
 }
 
 export class MSWLogger implements Logger{
-    logger : any
+    logger : Console
+    namespace : string
     config : LogConfig
     constructor(namespace: string, conf? : LogConfig) {
-        this.logger = debug(namespace)
+        this.namespace = namespace
+        // this.logger = debug(namespace)
+        this.logger = console
         if (conf)
         {
             this.config = conf
@@ -30,39 +33,40 @@ export class MSWLogger implements Logger{
     }
 
     init(namespace: string) {
-        this.logger = debug(namespace)
+        this.namespace = namespace
         return this
     }
 
     async info(formatter: string, args? : any[]) {
-        this.logger(formatter, args)
+        this.logger.info(formatter, args)
+        console.info(formatter, args)
     }
     
     async warn(formatter: string, args? : any[]) {
         if (this.config.isWarn || this.config.isDebug || this.config.isTrace)
         {
-            this.logger(`[Warn@${this.timestamp()}] ${formatter}`, args)
+            this.logger.warn(`[${this.namespace}:Warn@${this.timestamp()}] ${formatter}`, args)
         }
     }
 
     async debug(formatter: string, args? : any[]) {
         if (this.config.isDebug || this.config.isTrace)
         {
-            this.logger(`[Debug@${this.timestamp()}] ${formatter}`, args)
+            this.logger.debug(`[${this.namespace}:Debug@${this.timestamp()}] ${formatter}`, args)
         }
     }
 
     async trace(formatter: string, args? : any[]) {
         if (this.config.isTrace)
         {
-            this.logger(`[Trace@${this.timestamp()}] ${formatter}`, args)
+            this.logger.trace(`[${this.namespace}:Trace@${this.timestamp()}] ${formatter}`, args)
         }
     }
 
     async traceDeferred(callback: () => string) {
         if (this.config.isTrace)
         {
-            this.logger(`[Trace@${this.timestamp()}] ${callback()}`)
+            this.logger.trace(`[${this.namespace}:Trace@${this.timestamp()}] ${callback()}`)
         }
     }
 

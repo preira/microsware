@@ -111,9 +111,9 @@ export function transaction(conf : Configuration){
         let tx : TransactionObject
         const timeout = conf.transaction?.timeout || DEFAULT_TX_TIMEOUT
 
-        if (req.header.mswtransaction)
+        if (req.header.MSWTransaction)
         {
-                tx = req.header.mswtransaction
+                tx = req.header.MSWTransaction
         }
         else if (!conf.transaction) 
         {
@@ -136,9 +136,9 @@ export function transaction(conf : Configuration){
         
         req.mswTx = mswTx
     
-        res.header.setHeader('mswtransaction', 'PRE SET')
+        res.header.setHeader('MSWTransaction', 'PRE SET')
         await next()
     
-        res.header.setHeader('mswtransaction', mswTx.getTx2Respond())
+        res.header.setHeader('MSWTransaction', mswTx.getTx2Respond())
     }
 }
