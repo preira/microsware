@@ -10,7 +10,7 @@ export interface Logger {
 }
 
 export class MSWLogger implements Logger{
-    logger : Console
+    logger
     namespace : string
     config : LogConfig
     constructor(namespace: string, conf? : LogConfig) {
@@ -38,35 +38,34 @@ export class MSWLogger implements Logger{
     }
 
     async info(formatter: string, args? : any[]) {
-        this.logger.info(formatter, args)
-        console.info(formatter, args)
+        this.logger.log(formatter, args)
     }
     
     async warn(formatter: string, args? : any[]) {
         if (this.config.isWarn || this.config.isDebug || this.config.isTrace)
         {
-            this.logger.warn(`[${this.namespace}:Warn@${this.timestamp()}] ${formatter}`, args)
+            this.logger.log(`[${this.namespace}:Warn@${this.timestamp()}] ${formatter}`, args)
         }
     }
 
     async debug(formatter: string, args? : any[]) {
         if (this.config.isDebug || this.config.isTrace)
         {
-            this.logger.debug(`[${this.namespace}:Debug@${this.timestamp()}] ${formatter}`, args)
+            this.logger.log(`[${this.namespace}:Debug@${this.timestamp()}] ${formatter}`, args)
         }
     }
 
     async trace(formatter: string, args? : any[]) {
         if (this.config.isTrace)
         {
-            this.logger.trace(`[${this.namespace}:Trace@${this.timestamp()}] ${formatter}`, args)
+            this.logger.log(`[${this.namespace}:Trace@${this.timestamp()}] ${formatter}`, args)
         }
     }
 
     async traceDeferred(callback: () => string) {
         if (this.config.isTrace)
         {
-            this.logger.trace(`[${this.namespace}:Trace@${this.timestamp()}] ${callback()}`)
+            this.logger.log(`[${this.namespace}:Trace@${this.timestamp()}] ${callback()}`)
         }
     }
 
