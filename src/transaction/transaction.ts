@@ -136,9 +136,9 @@ export function transaction(conf : Configuration){
         
         req.mswTx = mswTx
     
-        res.header.setHeader('MSWTransaction', 'PRE SET')
+        res.setHeader('MSWTransaction', 'PRE SET')
         await next()
     
-        res.header.setHeader('MSWTransaction', mswTx.getTx2Respond())
+        res.setHeader('MSWTransaction', mswTx.getTx2Respond())
     }
 }
