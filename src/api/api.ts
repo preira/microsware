@@ -1,8 +1,9 @@
 import { Configuration } from "../configuration/configuration";
 import { Logger } from "../log/logger";
-import express, { IRoute, Express, RequestHandler } from 'express'
-import { ParamsDictionary, Query } from "express-serve-static-core";
+import express, { IRoute, Express } from 'express'
+// import { ParamsDictionary, Query } from "express-serve-static-core";
 import bodyParser from 'body-parser'
+import { RequestHandler } from "express-serve-static-core";
 
 
 export class API {
@@ -62,49 +63,49 @@ export class MSWRoute {
         this.route = server.route(path)
     }
 
-    all(...handlers: RequestHandler<ParamsDictionary, any, any, Query>[]): MSWRoute {
+    all(...handlers: RequestHandler[]): MSWRoute {
         this.logger.info(`Adding route handler 'ALL' for '${this.route.path}'`)
         this.route = this.route.all(handlers)
         return this
     }
     
-    get(...handlers: RequestHandler<ParamsDictionary, any, any, Query>[]): MSWRoute {
+    get(...handlers: RequestHandler[]): MSWRoute {
         this.logger.info(`Adding route handler 'GET' for '${this.route.path}'`)
         this.route = this.route.get(handlers)
         return this
     }
     
-    post(...handlers: RequestHandler<ParamsDictionary, any, any, Query>[]): MSWRoute {
+    post(...handlers: RequestHandler[]): MSWRoute {
         this.logger.info(`Adding route handler 'POST' for '${this.route.path}'`)
         this.route = this.route.post(handlers)
         return this
     }
     
-    put(...handlers: RequestHandler<ParamsDictionary, any, any, Query>[]): MSWRoute {
+    put(...handlers: RequestHandler[]): MSWRoute {
         this.logger.info(`Adding route handler 'PUT' for '${this.route.path}'`)
         this.route = this.route.put(handlers)
         return this
     }
     
-    delete(...handlers: RequestHandler<ParamsDictionary, any, any, Query>[]): MSWRoute {
+    delete(...handlers: RequestHandler[]): MSWRoute {
         this.logger.info(`Adding route handler 'DELETE' for '${this.route.path}'`)
         this.route = this.route.delete(handlers)
         return this
     }
     
-    patch(...handlers: RequestHandler<ParamsDictionary, any, any, Query>[]): MSWRoute {
+    patch(...handlers: RequestHandler[]): MSWRoute {
         this.logger.info(`Adding route handler 'PATCH' for '${this.route.path}'`)
         this.route = this.route.patch(handlers)
         return this
     }
     
-    options(...handlers: RequestHandler<ParamsDictionary, any, any, Query>[]): MSWRoute {
+    options(...handlers: RequestHandler[]): MSWRoute {
         this.logger.info(`Adding route handler 'OPTION' for '${this.route.path}'`)
         this.route = this.route.options(handlers)
         return this
     }
 
-    head(...handlers: RequestHandler<ParamsDictionary, any, any, Query>[]): MSWRoute {
+    head(...handlers: RequestHandler[]): MSWRoute {
         this.logger.info(`Adding route handler 'HEAD' for '${this.route.path}'`)
         this.route = this.route.head(handlers)
         return this

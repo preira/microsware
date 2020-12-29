@@ -5,7 +5,7 @@
   "main": "/lib/microsware.js",
   "types": "/lib/microsware.d.ts",
   "scripts": {
-    "prepublish": "npm version patch && npm run build",
+    "prepublishOnly": "npm run build && npm version patch && npm run build",
     "build": "tsc",
     "test": "test"
   },
@@ -20,6 +20,7 @@
     "Middleware"
   ],
   "dependencies": {
+    "@types/express-serve-static-core": "^4.17.17",
     "body-parser": "^1.19.0",
     "debug": "^4.3.1",
     "express": "^4.17.1",

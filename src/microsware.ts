@@ -23,7 +23,7 @@ export class MSWService implements Service {
 
   config : Configuration
   server : API
-  NODE_ENV
+  NODE_ENV : string
 
   constructor(conf: Configuration, logger?: any) {
     this.config = conf
