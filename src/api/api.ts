@@ -20,16 +20,16 @@ export class API {
         this.server.use(bodyParser.json())
         this.server.use((req, res, next) => {
             this.logger.traceDeferred(() => '\n[REQUEST OBJECT]\n' 
-                + JSON.stringify(req.params)
-                + JSON.stringify(req.body)
-                + JSON.stringify(req.query)
-                + '\n[REQUEST OBJECT END]\n')
+                + '{\n\t' + JSON.stringify(req.params) + ','
+                + '\t' + JSON.stringify(req.body) + ','
+                + '\t' + JSON.stringify(req.query)
+                + '\n}\n[REQUEST OBJECT END]\n')
             next()
             this.logger.traceDeferred(() => '\n[RESPONSE OBJECT]\n' 
-                + JSON.stringify(req.params)
-                + JSON.stringify(req.body)
-                + JSON.stringify(req.query)
-                + '\n[RESPONSE OBJECT END]\n')
+                + '{\n\t' + JSON.stringify(res.req?.params)
+                + '\t' + JSON.stringify(res.req?.body)
+                + '\t' + JSON.stringify(res.req?.query)
+                + '\n}\n[RESPONSE OBJECT END]\n')
         })
     }
 
@@ -43,7 +43,10 @@ export class API {
 
     run() {
         // rest of the code remains same
-        this.server.listen(this.config.server.httpport, () => {
+        if (!this.config.server.hostname)
+            this.config.server.hostname = 'localhost'
+
+        this.server.listen(this.config.server.httpport, this.config.server.hostname, () => {
             this.logger.info(`⚡️[server]: Server now is running at https://${this.config.server.hostname}:${this.config.server.httpport}`);
         })
       }

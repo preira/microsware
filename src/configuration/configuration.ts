@@ -30,7 +30,7 @@ export interface Configuration {
     
     server : {
         httpport : number
-        hostname? : number
+        hostname? : string
     }
     
     batchService? :  {
