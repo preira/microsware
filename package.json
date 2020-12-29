@@ -5,7 +5,7 @@
   "main": "/lib/microsware.js",
   "types": "/lib/microsware.d.ts",
   "scripts": {
-    "prepublish": "npm run build",
+    "prepublish": "npm version patch && npm run build",
     "build": "tsc",
     "test": "test"
   },
