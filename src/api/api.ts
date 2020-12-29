@@ -1,6 +1,6 @@
 import { Configuration } from "../configuration/configuration";
 import { Logger } from "../log/logger";
-import express, { IRoute, Express } from 'express'
+import express, { IRoute, Express, RequestHandler } from 'express'
 import bodyParser from 'body-parser'
 
 
@@ -45,43 +45,53 @@ export class API {
 }
 
 /**
- * Wrapper for Express IRoute to eventually intercept method's call has needed
+ * Wrapper for Express IRoute to eventually intercept method's 
+ * call has needed and simplify route implementation
  */
 export class MSWRoute {
     route: IRoute
+    
     constructor(path: string, server: Express) {
         this.route = server.route(path)
     }
 
-    all(req : any, res : any, next : any): IRoute {
-        return this.route.all(req, res, next)
+    all(...handlers: RequestHandler<any, any, any, any>[]): MSWRoute {
+        this.route = this.route.all(handlers)
+        return this
     }
     
-    get(req : any, res : any, next : any): IRoute {
-        return this.route.all(req, res, next)
+    get(...handlers: RequestHandler<any, any, any, any>[]): MSWRoute {
+        this.route = this.route.get(handlers)
+        return this
     }
     
-    post(req : any, res : any, next : any): IRoute {
-        return this.route.all(req, res, next)
+    post(...handlers: RequestHandler<any, any, any, any>[]): MSWRoute {
+        this.route = this.route.post(handlers)
+        return this
     }
     
-    put(req : any, res : any, next : any): IRoute {
-        return this.route.all(req, res, next)
+    put(...handlers: RequestHandler<any, any, any, any>[]): MSWRoute {
+        this.route = this.route.put(handlers)
+        return this
     }
     
-    delete(req : any, res : any, next : any): IRoute {
-        return this.route.all(req, res, next)
+    delete(...handlers: RequestHandler<any, any, any, any>[]): MSWRoute {
+        this.route = this.route.delete(handlers)
+        return this
     }
     
-    patch(req : any, res : any, next : any): IRoute {
-        return this.route.all(req, res, next)
+    patch(...handlers: RequestHandler<any, any, any, any>[]): MSWRoute {
+        this.route = this.route.patch(handlers)
+        return this
     }
     
-    options(req : any, res : any, next : any): IRoute {
-        return this.route.all(req, res, next)
+    options(...handlers: RequestHandler<any, any, any, any>[]): MSWRoute {
+        this.route = this.route.options(handlers)
+        return this
     }
 
-    head(req : any, res : any, next : any): IRoute {
-        return this.route.all(req, res, next)
+    head(...handlers: RequestHandler<any, any, any, any>[]): MSWRoute {
+        this.route = this.route.head(handlers)
+        return this
     }
 }
