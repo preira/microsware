@@ -6,6 +6,7 @@ export interface Logger {
     warn(formatter: string, args? : any[]) : void
     debug(formatter: string, args? : any[]) : void
     trace(formatter: string, args? : any[]) : void
+    traceDeferred(callback: () => string) : void
 }
 
 export class MSWLogger implements Logger{
@@ -55,6 +56,13 @@ export class MSWLogger implements Logger{
         if (this.config.isTrace)
         {
             this.logger(`[Trace@${this.timestamp()}] ${formatter}`, args)
+        }
+    }
+
+    async traceDeferred(callback: () => string) {
+        if (this.config.isTrace)
+        {
+            this.logger(`[Trace@${this.timestamp()}] ${callback()}`)
         }
     }
 

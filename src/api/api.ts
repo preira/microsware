@@ -1,6 +1,7 @@
 import { Configuration } from "../configuration/configuration";
 import { Logger } from "../log/logger";
 import express, { IRoute, Express, RequestHandler } from 'express'
+import { ParamsDictionary, Query } from "express-serve-static-core";
 import bodyParser from 'body-parser'
 
 
@@ -17,12 +18,16 @@ export class API {
         this.server.use(bodyParser.urlencoded({ extended: false }))
         this.server.use(bodyParser.json())
         this.server.use((req, res, next) => {
-            this.logger.trace('\n[REQUEST OBJECT]\n' 
-                + JSON.stringify(req)
+            this.logger.traceDeferred(() => '\n[REQUEST OBJECT]\n' 
+                + JSON.stringify(req.params)
+                + JSON.stringify(req.body)
+                + JSON.stringify(req.query)
                 + '\n[REQUEST OBJECT END]\n')
-                next()
-                this.logger.trace('\n[RESPONSE OBJECT]\n' 
-                + JSON.stringify(res)
+            next()
+            this.logger.traceDeferred(() => '\n[RESPONSE OBJECT]\n' 
+                + JSON.stringify(req.params)
+                + JSON.stringify(req.body)
+                + JSON.stringify(req.query)
                 + '\n[RESPONSE OBJECT END]\n')
         })
     }
@@ -51,55 +56,55 @@ export class API {
 export class MSWRoute {
     route: IRoute
     logger: Logger
-    
+    // Request<ParamsDictionary, any, any, QueryString.ParsedQs>
     constructor(path: string, server: Express, logger: Logger) {
         this.logger = logger
         this.route = server.route(path)
     }
 
-    all(...handlers: RequestHandler<any, any, any, any>[]): MSWRoute {
+    all(...handlers: RequestHandler<ParamsDictionary, any, any, Query>[]): MSWRoute {
         this.logger.info(`Adding route handler 'ALL' for '${this.route.path}'`)
         this.route = this.route.all(handlers)
         return this
     }
     
-    get(...handlers: RequestHandler<any, any, any, any>[]): MSWRoute {
+    get(...handlers: RequestHandler<ParamsDictionary, any, any, Query>[]): MSWRoute {
         this.logger.info(`Adding route handler 'GET' for '${this.route.path}'`)
         this.route = this.route.get(handlers)
         return this
     }
     
-    post(...handlers: RequestHandler<any, any, any, any>[]): MSWRoute {
+    post(...handlers: RequestHandler<ParamsDictionary, any, any, Query>[]): MSWRoute {
         this.logger.info(`Adding route handler 'POST' for '${this.route.path}'`)
         this.route = this.route.post(handlers)
         return this
     }
     
-    put(...handlers: RequestHandler<any, any, any, any>[]): MSWRoute {
+    put(...handlers: RequestHandler<ParamsDictionary, any, any, Query>[]): MSWRoute {
         this.logger.info(`Adding route handler 'PUT' for '${this.route.path}'`)
         this.route = this.route.put(handlers)
         return this
     }
     
-    delete(...handlers: RequestHandler<any, any, any, any>[]): MSWRoute {
+    delete(...handlers: RequestHandler<ParamsDictionary, any, any, Query>[]): MSWRoute {
         this.logger.info(`Adding route handler 'DELETE' for '${this.route.path}'`)
         this.route = this.route.delete(handlers)
         return this
     }
     
-    patch(...handlers: RequestHandler<any, any, any, any>[]): MSWRoute {
+    patch(...handlers: RequestHandler<ParamsDictionary, any, any, Query>[]): MSWRoute {
         this.logger.info(`Adding route handler 'PATCH' for '${this.route.path}'`)
         this.route = this.route.patch(handlers)
         return this
     }
     
-    options(...handlers: RequestHandler<any, any, any, any>[]): MSWRoute {
+    options(...handlers: RequestHandler<ParamsDictionary, any, any, Query>[]): MSWRoute {
         this.logger.info(`Adding route handler 'OPTION' for '${this.route.path}'`)
         this.route = this.route.options(handlers)
         return this
     }
 
-    head(...handlers: RequestHandler<any, any, any, any>[]): MSWRoute {
+    head(...handlers: RequestHandler<ParamsDictionary, any, any, Query>[]): MSWRoute {
         this.logger.info(`Adding route handler 'HEAD' for '${this.route.path}'`)
         this.route = this.route.head(handlers)
         return this
