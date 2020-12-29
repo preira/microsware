@@ -15,8 +15,8 @@ export class MSWLogger implements Logger{
     config : LogConfig
     constructor(namespace: string, conf? : LogConfig) {
         this.namespace = namespace
-        this.logger = debug(namespace)
-        // this.logger = console
+        // this.logger = debug(namespace)
+        this.logger = console
         if (conf)
         {
             this.config = conf
@@ -70,7 +70,8 @@ export class MSWLogger implements Logger{
     }
 
     log(formatter: string, args? : any[]) {
-        this.logger(formatter, args)
+        // this.logger(formatter, args)
+        this.logger.log(formatter, args)
     }
 
     timestamp() {
