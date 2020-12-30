@@ -7,7 +7,7 @@
  * @param {function} _f funtion to be wrapped
  * @param {function} beforeCall - receives f's this pointer and arguments
  * @param {function} afterCall - receives f's return value
- * @param {function} onError - receives thrown error. If onErrror throws an error, it will fail silently. So, treat your own errors
+ * @param {function} onError - receives thrown error. If onErrror throws an error it will propagate it. So, treat your own errors and rethrow if it makes sense.
  */
 export function wrap(_f, beforeCall = undefined, afterCall = undefined, onError = undefined) {
     const n = function end (...args) {
@@ -19,13 +19,14 @@ export function wrap(_f, beforeCall = undefined, afterCall = undefined, onError 
         } 
         catch (e) 
         {
-            try
+            if (onError) 
             {
-                if (onError) onError(e)
-            } 
-            catch (err) {/* do nothing */}
-
-            throw e
+                return onError(e)
+            }
+            else 
+            {
+                throw e
+            }
         }
     }
     for(let prop in _f) { /* #3 */

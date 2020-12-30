@@ -25,11 +25,13 @@ export interface Transaction {
 }
 
 export class MSWTransation {
-    
+    private originalTimeout : number
     tx : TransactionObject
     receptionTimestamp : Date
+    timeoutSent : boolean = false
 
     constructor(obj : TransactionObject) {
+        this.originalTimeout = obj.availableTimeout
         this.tx = obj
         this.receptionTimestamp = new Date()
         this.tx.receivedAt = date2string(this.receptionTimestamp)
@@ -39,14 +41,14 @@ export class MSWTransation {
         const available = this.tx.availableTimeout 
             + this.receptionTimestamp.getTime() 
             - new Date().getTime()
-        if (available < 0) throw new TimeoutError(this.printTimeoutMsg(this.tx, new Date()))
+        if (available < 0) return 0 //throw new TimeoutError(this.printTimeoutMsg(this.tx, new Date()))
         return available
     }
 
-    printTimeoutMsg(tx : TransactionObject, timestamp : Date) {
-        return `Transaction received from ${tx.sender} ` + 
-            `at ${tx.receivedAt} with initial timeout of ` +
-            `${tx.availableTimeout} has timed out after ` +
+    printTimeoutMsg(timestamp : Date = new Date()) {
+        return `Transaction received from ${this.tx.sender} ` + 
+            `at ${this.tx.receivedAt} with initial timeout of ` +
+            `${this.originalTimeout} has timed out after ` +
             `${timestamp.getTime()-this.receptionTimestamp.getTime()}`
     }
 
@@ -74,7 +76,7 @@ export class MSWTransation {
 }
 
 function date2string(date : Date) : string {
-    return date.getFullYear + '-' +
+    return date.getFullYear() + '-' +
         pad(date.getMonth()+1, 2) + '-' + 
         pad(date.getDate()+1, 2) + 'T' + 
         pad(date.getHours()+1, 2) + ':' + 
@@ -138,15 +140,66 @@ export function transaction(conf : Configuration, logger: Logger){
         res.end = wrap(
             res.end, 
             (...args : any[]) => {
-                if (!res.writableEnded)
+                // don't add to response if it wasn't present in the request - mswTxHeader 
+                if (mswTxHeader && !res.writableEnded && !res.writableFinished)
                 {
                     const txStr = JSON.stringify(mswTx.getTx2Respond())
-                    logger.traceDeferred(() => `Writing transation to header ${txStr}`)
                     res.setHeader('MSWTransaction', txStr)
+                    logger.traceDeferred(() => `Writing transation to header ${txStr}`)
                 }
             })
 
+        res.json = wrap(
+            res.json, 
+            (...args : any[]) => {
+                if (mswTx.timeoutSent)
+                {
+                    throw new TimeoutError(mswTx.printTimeoutMsg())
+                }
+            },
+            undefined,
+            (err : TimeoutError) => {
+                if (err.code == 504)
+                {
+                    logger.traceDeferred(() => `App tried to respond after timeout`)
+                    return res
+                }
+                else
+                {
+                    throw err
+                }
+            })
+
+        res.send = wrap(
+            res.send, 
+            (...args : any[]) => {
+                if (mswTx.timeoutSent)
+                {
+                    throw new TimeoutError(mswTx.printTimeoutMsg())
+                }
+            },
+            undefined,
+            (err : TimeoutError) => {
+                if (err.code == 504)
+                {
+                    logger.traceDeferred(() => `App tried to respond after timeout`)
+                    return res
+                }
+                else
+                {
+                    throw err
+                }
+            })
+
+        setTimeout(() => {
+            if(!res.writableEnded)
+            {
+                res.status(504).send('Transaction timed out')
+                logger.error(mswTx.printTimeoutMsg())
+                mswTx.timeoutSent = true
+            }
+        }, mswTx.availableTimeout())
+
         next()
-    
     }
 }

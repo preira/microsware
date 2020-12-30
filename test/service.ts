@@ -19,7 +19,7 @@ const server : Service = new MSWService(
             isLocalOnly : true
         },
         transaction : {
-            timeout : 60000
+            timeout : 1000
         }
     })
 
@@ -40,18 +40,14 @@ server
     .api()
     .route(twoservices)
     .post(post(twoservices))
-//TODO: add API call to self to timeout
-const timeoutservices = '/test/two-services$'
+    .get(secondget(twoservices))
+//TODO: add API call to self to timexout
+const timeoutservices = '/test/timeout-services$'
 server
     .api()
     .route(timeoutservices)
     .post(post(timeoutservices))
-
-
-// REMOVE
-api.route('/test/json$').get((rq, rs, nxt) => { rs.json({prop:'prop value'})})
-api.route('/test/end$') .get((rq, rs, nxt)  => { rs.end()})
-api.route('/test/send$').get((rq, rs, nxt) => { rs.send(`{prop:'prop value'}`)})
+    .get(gettimeout(timeoutservices))
 
 
 function get(url: string) {
@@ -59,25 +55,48 @@ function get(url: string) {
 
     return (req: any, res: any, next: any) => {
         const data = req.query.data
+        logger.info(data)
+        res.status(200).json({'echo': data})
+    }
+}
+
+function gettimeout(url: string) {
+    const logger = server.logger(`Template server - gettimeout '${url}'`)
+
+    return (req: any, res: any, next: any) => {
+        const data = req.query.data
+        logger.info(data)
+        setTimeout(() => {
+            res.status(200).json({'echo': data}).end()
+        }, 6000)
+    }
+}
+
+function secondget(url: string) {
+    const logger = server.logger(`Template server - secondget '${url}'`)
+
+    return (req: any, res: any, next: any) => {
+        const data = req.query.data
         res.setHeader('Yet-another-header', 'header value')
         logger.info(data)
-        res.status(200).json({'echo': data}).end()
+        res.status(200).json({'echo': data})
+        server.fetch().get('http://localhost:3000/test?origin=secondget')
     }
 }
 
 function post(url: string) {
-    const logger = server.logger(`Template server - get '${url}'`)
+    const logger = server.logger(`Template server - post '${url}'`)
 
     return (req: any, res: any, next: any) => {
         const data = req.body.data
         logger.info(data)
-        res.status(200).json({'echo': data}).end()
+        res.status(200).json({'echo': data})
 
     }
 }
 
 function put(url: string) {
-    const logger = server.logger(`Template server - get '${url}'`)
+    const logger = server.logger(`Template server - put '${url}'`)
 
     return (req: any, res: any, next: any) => {
         const param = req.params.data
@@ -89,12 +108,12 @@ function put(url: string) {
         res.status(201).json({
             'echo param': param, 
             'echo body':body
-        }).end()
+        })
     }
 }
 
 function del(url: string) {
-    const logger = server.logger(`Template server - get '${url}'`)
+    const logger = server.logger(`Template server - del '${url}'`)
 
     return (req: any, res: any, next: any) => {
         const param = req.params.data
@@ -103,13 +122,13 @@ function del(url: string) {
 
         res.status(200).json({
             'echo param': param, 
-        }).end()
+        })
 
     }
 }
 
 function patch(url: string) {
-    const logger = server.logger(`Template server - get '${url}'`)
+    const logger = server.logger(`Template server - patch '${url}'`)
 
     return (req: any, res: any, next: any) => {
         const param = req.params.data
@@ -121,7 +140,7 @@ function patch(url: string) {
         res.status(200).json({
             'echo param': param, 
             'echo body':body
-        }).end()
+        })
     }
 }
 

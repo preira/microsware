@@ -2,6 +2,7 @@ import { LogConfig } from "../configuration/configuration";
 
 export interface Logger {
     info(formatter: string, args? : any[]) : void
+    error(formatter: string, args? : any[]) : void
     warn(formatter: string, args? : any[]) : void
     debug(formatter: string, args? : any[]) : void
     trace(formatter: string, args? : any[]) : void
@@ -37,7 +38,11 @@ export class MSWLogger implements Logger{
     }
 
     async info(formatter: string, args? : any[]) {
-        this.log(formatter, args)
+        this.log(`[${this.namespace}:Info@${this.timestamp()}] ${formatter}`, args)
+    }
+    
+    async error(formatter: string, args? : any[]) {
+        this.log(`[${this.namespace}:Error@${this.timestamp()}] ${formatter}`, args)
     }
     
     async warn(formatter: string, args? : any[]) {
@@ -68,9 +73,16 @@ export class MSWLogger implements Logger{
         }
     }
 
-    log(formatter: string, args? : any[]) {
+    private log(formatter: string, args? : any[]) {
         // this.logger(formatter, args)
-        this.logger.log(formatter, args)
+        if (args)
+        {
+            this.logger.log(formatter, args)
+        }
+        else 
+        {
+            this.logger.log(formatter)
+        }
     }
 
     timestamp() {

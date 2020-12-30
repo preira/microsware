@@ -20,18 +20,37 @@ export class API {
         this.server.use(bodyParser.json())
         this.server.use((req, res, next) => {
             res.contentType('application/json')
-            this.logger.traceDeferred(() => '\n[REQUEST OBJECT]\n' 
+            this.logger.traceDeferred(() => '\n    [REQUEST OBJECT]\n' 
                 + '\t{\n\t' + JSON.stringify(req.params) + ','
                 + '\n\t\t' + JSON.stringify(req.body) + ','
                 + '\n\t\t' + JSON.stringify(req.query)
-                + '\n\t}\n[REQUEST OBJECT END]\n')
+                + '\n\t}\n    [REQUEST OBJECT END]\n')
 
-            next()
-            this.logger.traceDeferred(() => '\n[RESPONSE OBJECT]\n' 
-                + '\t{\n\t' + JSON.stringify(res.req?.params)
-                + '\n\t\t' + JSON.stringify(res.req?.body)
-                + '\n\t\t' + JSON.stringify(res.req?.query)
-                + '\n\t}\n[RESPONSE OBJECT END]\n')
+            try 
+            {
+                next()
+            }
+            catch (e)
+            {
+                if (e.code) 
+                {
+                    this.logger.debug(`Failing with error code ${e.code} - ${e.message}`)
+                    res.status(e.code).json(e)
+                }
+                else
+                {
+                    this.logger.debug(`Failing with error code 500 - Unknown error`)
+                    res.sendStatus(500)
+                }
+            }
+            finally
+            {
+                this.logger.traceDeferred(() => '\n    [RESPONSE OBJECT]\n' 
+                    + '\t{\n\t' + JSON.stringify(res.req?.params)
+                    + '\n\t\t' + JSON.stringify(res.req?.body)
+                    + '\n\t\t' + JSON.stringify(res.req?.query)
+                    + '\n\t}\n    [RESPONSE OBJECT END]\n')
+            }
         })
     }
 
@@ -67,6 +86,8 @@ export class MSWRoute {
         this.logger = logger
         this.route = server.route(path)
     }
+
+    // TODO: wrap handlers to stop execution if timeout has occurred 
 
     all(...handlers: RequestHandler[]): MSWRoute {
         this.logger.info(`Adding route handler 'ALL' for '${this.route.path}'`)

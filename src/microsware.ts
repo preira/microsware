@@ -3,6 +3,7 @@ import { Configuration } from './configuration/configuration'
 import { API } from './api/api'
 import { Logger, MSWLogger } from './log/logger'
 import { transaction } from './transaction/transaction'
+import { Fetch } from './fetch/fetch'
 
 /* TODO: 
   consider to export an interface as a contract for
@@ -15,6 +16,7 @@ import { transaction } from './transaction/transaction'
 */
 export interface Service {
   api() : API
+  fetch() : Fetch
   logger(namespace: string) : Logger
   run() : void
 }
@@ -41,7 +43,7 @@ export class MSWService implements Service {
     }
 
     this.server = new API(this.config, this.logger('microsware-api'))
-    //TODO: get a way of setting a new transaction
+    
     this.server.use(transaction(conf, this.logger('microsware-tx')))
     //TODO: configure serve to:
     //this.server.use > auth > transaction
@@ -69,6 +71,13 @@ export class MSWService implements Service {
     return new MSWLogger(namespace, this.config.log)
   }
 
+  fetch() : Fetch {
+    // TODO: cache fetch object for different targets
+    // TODO: configure from configuration object
+
+    return new Fetch(this.logger('microsware-fetch'))
+  }
+
   /*
     event.listen
     event.send
@@ -79,16 +88,8 @@ export class MSWService implements Service {
     use local cache
     use remote cache
   */
-  listen() {
+  listen(to : string) {
     // TODO: register event listenner 
-  }
-
-  get() {
-    //TODO: treat transation
-    //TODO: get from cache if cacheable
-    //TODO: get from datasource
-    //TODO: update cache if cacheable
-    //TODO: log and update sanity status
   }
 
   send() {
