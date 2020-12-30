@@ -67,7 +67,7 @@ function gettimeout(url: string) {
         const data = req.query.data
         logger.info(data)
         setTimeout(() => {
-            res.status(200).json({'echo': data}).end()
+            res.status(200).json({'echo': data})
         }, 6000)
     }
 }
