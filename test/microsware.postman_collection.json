@@ -1,0 +1,232 @@
+{
+	"info": {
+		"_postman_id": "f5ea081b-3ee6-4701-b111-e4a920c2bc7e",
+		"name": "microsware",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "get test",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "a4cf1f9e-f516-4243-b348-4cd863deeaf0",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"let jsonData",
+							"console.log(pm.response.stream.length)",
+							"if (pm.response.stream.length > 0)",
+							"    jsonData = pm.response.json();",
+							"",
+							"pm.test(\"response contains current\", function () {",
+							"    pm.expect(jsonData && jsonData.echo)",
+							"});",
+							"",
+							"pm.test(\"Content-Type is present\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\")",
+							"});",
+							"",
+							"",
+							"pm.test(\"MSWTransaction is not present\", function () {",
+							"    pm.response.to.not.have.header(\"MSWTransaction\")",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/test?data=test%20data",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"test"
+					],
+					"query": [
+						{
+							"key": "data",
+							"value": "test%20data"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get test timeout-service",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "5bb8dc1c-9c23-4d94-ab78-0ec5988a9e31",
+						"exec": [
+							"pm.test(\"Status code is 504\", function () {",
+							"    pm.response.to.have.status(504);",
+							"});",
+							"",
+							"pm.test(\"Content-Type is present\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\")",
+							"",
+							"});",
+							"",
+							"",
+							"pm.test(\"MSWTransaction is present\", function () {",
+							"    pm.response.to.have.header(\"MSWTransaction\")",
+							"});",
+							"/*",
+							"let jsonData",
+							"console.log(pm.response.stream.length)",
+							"if (pm.response.stream.length > 0)",
+							"    jsonData = pm.response.json();",
+							"",
+							"pm.test(\"response contains current\", function () {",
+							"    pm.expect(jsonData && jsonData.echo)",
+							"});",
+							"",
+							"pm.test(\"response contains list\", function () {",
+							"    pm.expect(jsonData && jsonData.language)",
+							"        .to.have.property('list');",
+							"});",
+							"",
+							"pm.test(\"response contains list\", function () {",
+							"    pm.expect(jsonData && jsonData.language)",
+							"        .to.have.property('translations');",
+							"});",
+							"",
+							"pm.test(\"Content-Type is present\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\")",
+							"",
+							"});",
+							"",
+							"",
+							"pm.test(\"MSWTransaction is present\", function () {",
+							"    pm.response.to.have.header(\"MSWTransaction\")",
+							"});",
+							"*/",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"description": "injected header to active transaction\n",
+						"key": "MSWTransaction",
+						"type": "text",
+						"value": "{\"sender\":\"Postman-test\",\"startTime\":\"2020-12-31T14:28:10.211\",\"availableTimeout\":1000}"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:3000/test/timeout-services?data=should%20timeout",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"test",
+						"timeout-services"
+					],
+					"query": [
+						{
+							"key": "data",
+							"value": "should%20timeout"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get test with MSWTransaction",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "5bb8dc1c-9c23-4d94-ab78-0ec5988a9e31",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"let jsonData",
+							"console.log(pm.response.stream.length)",
+							"if (pm.response.stream.length > 0)",
+							"    jsonData = pm.response.json();",
+							"",
+							"pm.test(\"response contains current\", function () {",
+							"    pm.expect(jsonData && jsonData.echo)",
+							"});",
+							"",
+							"/*",
+							"pm.test(\"response contains list\", function () {",
+							"    pm.expect(jsonData && jsonData.language)",
+							"        .to.have.property('list');",
+							"});",
+							"",
+							"pm.test(\"response contains list\", function () {",
+							"    pm.expect(jsonData && jsonData.language)",
+							"        .to.have.property('translations');",
+							"});",
+							"*/",
+							"",
+							"pm.test(\"Content-Type is present\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\")",
+							"",
+							"});",
+							"",
+							"",
+							"pm.test(\"MSWTransaction is present\", function () {",
+							"    pm.response.to.have.header(\"MSWTransaction\")",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"description": "injected header to active transaction\n",
+						"key": "MSWTransaction",
+						"type": "text",
+						"value": "{\"sender\":\"Postman-test\",\"startTime\":\"2020-12-31T14:28:10.211\",\"availableTimeout\":1000}"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:3000/test?data=Transation header is present",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"test"
+					],
+					"query": [
+						{
+							"key": "data",
+							"value": "Transation header is present"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
