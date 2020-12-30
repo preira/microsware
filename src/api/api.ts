@@ -3,7 +3,7 @@ import { Logger } from "../log/logger";
 import express, { IRoute, Express } from 'express'
 // import { ParamsDictionary, Query } from "express-serve-static-core";
 import bodyParser from 'body-parser'
-import { RequestHandler } from "express-serve-static-core";
+import { RequestHandler } from "express-serve-static-core"
 
 
 export class API {
@@ -19,11 +19,13 @@ export class API {
         this.server.use(bodyParser.urlencoded({ extended: false }))
         this.server.use(bodyParser.json())
         this.server.use((req, res, next) => {
+            res.contentType('application/json')
             this.logger.traceDeferred(() => '\n[REQUEST OBJECT]\n' 
                 + '\t{\n\t' + JSON.stringify(req.params) + ','
                 + '\n\t\t' + JSON.stringify(req.body) + ','
                 + '\n\t\t' + JSON.stringify(req.query)
                 + '\n\t}\n[REQUEST OBJECT END]\n')
+
             next()
             this.logger.traceDeferred(() => '\n[RESPONSE OBJECT]\n' 
                 + '\t{\n\t' + JSON.stringify(res.req?.params)

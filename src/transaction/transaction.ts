@@ -1,5 +1,7 @@
 import { Configuration } from "../configuration/configuration"
 import { TimeoutError } from "../exception/exception"
+import { wrap } from '../js-common/express-overload'
+import { Logger } from "../log/logger"
 
 export const DEFAULT_TX_TIMEOUT = 5*60*1000
 /**
@@ -104,16 +106,16 @@ function pad(n : number, digits : number) : string {
     return String(n).padStart(digits, '0')
 }
 
-export function transaction(conf : Configuration){
+export function transaction(conf : Configuration, logger: Logger){
     return async (req : any, res : any, next : any)  => {
-
         const timestamp = new Date()
         let tx : TransactionObject
         const timeout = conf.transaction?.timeout || DEFAULT_TX_TIMEOUT
 
-        if (req.header.MSWTransaction)
+        const mswTxHeader = req.header('MSWTransaction')
+        if (mswTxHeader)
         {
-                tx = req.header.MSWTransaction
+            tx = JSON.parse(mswTxHeader)
         }
         else if (!conf.transaction) 
         {
@@ -131,14 +133,20 @@ export function transaction(conf : Configuration){
             }
         }
 
-        //TODO: either a running transaction exists or one is created if declared
         const mswTx = new MSWTransation(tx)
-        
-        req.mswTx = mswTx
     
-        res.setHeader('MSWTransaction', 'PRE SET')
-        await next()
+        res.end = wrap(
+            res.end, 
+            (...args : any[]) => {
+                if (!res.writableEnded)
+                {
+                    const txStr = JSON.stringify(mswTx.getTx2Respond())
+                    logger.traceDeferred(() => `Writing transation to header ${txStr}`)
+                    res.setHeader('MSWTransaction', txStr)
+                }
+            })
+
+        next()
     
-        res.setHeader('MSWTransaction', mswTx.getTx2Respond())
     }
 }

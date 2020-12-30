@@ -7,7 +7,7 @@
   "scripts": {
     "prepublishOnly": "npm version patch && npm run build",
     "build": "tsc",
-    "testserver": "nodemon ./test/service.ts",
+    "testserver": "npm run build && nodemon ./test/service.ts",
     "test": "test"
   },
   "repository": {

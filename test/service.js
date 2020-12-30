@@ -42,6 +42,7 @@ function get(url) {
     return function (req, res, next) {
         var data = req.query.data;
         logger.info(data);
+res.setHeader('Yet-another-header', 'header value')
         res.status(200).json({ 'echo': data }).end();
     };
 }

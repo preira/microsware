@@ -17,11 +17,16 @@ const server : Service = new MSWService(
             isTrace : true,
             isWarn : true,
             isLocalOnly : true
+        },
+        transaction : {
+            timeout : 60000
         }
     })
 
-server
+const api = server
     .api()
+
+api    
     .route('/test$')
     .get(get('/test$'))
     .post(post('/test$'))
@@ -43,11 +48,18 @@ server
     .post(post(timeoutservices))
 
 
+// REMOVE
+api.route('/test/json$').get((rq, rs, nxt) => { rs.json({prop:'prop value'})})
+api.route('/test/end$') .get((rq, rs, nxt)  => { rs.end()})
+api.route('/test/send$').get((rq, rs, nxt) => { rs.send(`{prop:'prop value'}`)})
+
+
 function get(url: string) {
     const logger = server.logger(`Template server - get '${url}'`)
 
     return (req: any, res: any, next: any) => {
         const data = req.query.data
+        res.setHeader('Yet-another-header', 'header value')
         logger.info(data)
         res.status(200).json({'echo': data}).end()
     }
