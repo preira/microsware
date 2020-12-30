@@ -42,7 +42,7 @@ export class MSWService implements Service {
 
     this.server = new API(this.config, this.logger('microsware-api'))
     //TODO: get a way of setting a new transaction
-    this.server.use(transaction(conf))
+    this.server.use(transaction(conf, this.logger('microsware-tx')))
     //TODO: configure serve to:
     //this.server.use > auth > transaction
     // TODO: treat authorization (needs paths )
