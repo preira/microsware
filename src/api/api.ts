@@ -46,9 +46,9 @@ export class API {
             finally
             {
                 this.logger.traceDeferred(() => '\n    [RESPONSE OBJECT]\n' 
-                    + '\t{\n\t' + JSON.stringify(res.req?.params)
-                    + '\n\t\t' + JSON.stringify(res.req?.body)
-                    + '\n\t\t' + JSON.stringify(res.req?.query)
+                    + '\t{\n\t' + JSON.stringify(res.statusCode)
+                    + '\n\t\t' + JSON.stringify(res.statusMessage)
+                    + '\n\t\t' + JSON.stringify(res.getHeaders)
                     + '\n\t}\n    [RESPONSE OBJECT END]\n')
             }
         })
@@ -68,7 +68,7 @@ export class API {
             this.config.server.hostname = 'localhost'
 
         this.server.listen(this.config.server.httpport, this.config.server.hostname, () => {
-            this.logger.info(`⚡️[server]: Server now is running at https://${this.config.server.hostname}:${this.config.server.httpport}`);
+            this.logger.info(`⚡️ [server]: Server now is ⚡️ running ⚡️ at https://${this.config.server.hostname}:${this.config.server.httpport}`);
         })
       }
     
@@ -87,53 +87,68 @@ export class MSWRoute {
         this.route = server.route(path)
     }
 
-    // TODO: wrap handlers to stop execution if timeout has occurred 
-
     all(...handlers: RequestHandler[]): MSWRoute {
         this.logger.info(`Adding route handler 'ALL' for '${this.route.path}'`)
-        this.route = this.route.all(handlers)
-        return this
-    }
-    
-    get(...handlers: RequestHandler[]): MSWRoute {
-        this.logger.info(`Adding route handler 'GET' for '${this.route.path}'`)
-        this.route = this.route.get(handlers)
+        this.route = this.route.all(intercept(handlers))
         return this
     }
     
     post(...handlers: RequestHandler[]): MSWRoute {
         this.logger.info(`Adding route handler 'POST' for '${this.route.path}'`)
-        this.route = this.route.post(handlers)
+        this.route = this.route.post(intercept(handlers))
         return this
     }
     
     put(...handlers: RequestHandler[]): MSWRoute {
         this.logger.info(`Adding route handler 'PUT' for '${this.route.path}'`)
-        this.route = this.route.put(handlers)
+        this.route = this.route.put(intercept(handlers))
         return this
     }
     
     delete(...handlers: RequestHandler[]): MSWRoute {
         this.logger.info(`Adding route handler 'DELETE' for '${this.route.path}'`)
-        this.route = this.route.delete(handlers)
+        this.route = this.route.delete(intercept(handlers))
         return this
     }
     
     patch(...handlers: RequestHandler[]): MSWRoute {
         this.logger.info(`Adding route handler 'PATCH' for '${this.route.path}'`)
-        this.route = this.route.patch(handlers)
+        this.route = this.route.patch(intercept(handlers))
         return this
     }
     
     options(...handlers: RequestHandler[]): MSWRoute {
         this.logger.info(`Adding route handler 'OPTION' for '${this.route.path}'`)
-        this.route = this.route.options(handlers)
+        this.route = this.route.options(intercept(handlers))
         return this
     }
 
     head(...handlers: RequestHandler[]): MSWRoute {
         this.logger.info(`Adding route handler 'HEAD' for '${this.route.path}'`)
-        this.route = this.route.head(handlers)
+        this.route = this.route.head(intercept(handlers))
         return this
+    }
+
+    get(...handlers: RequestHandler[]): MSWRoute {
+        this.logger.info(`Adding route handler 'GET' for '${this.route.path}'`)
+        this.route = this.route.get(intercept(handlers))
+        return this
+    }
+    
+}
+
+function intercept(handlers : RequestHandler[])
+{
+    return handlers.map(_intercept)
+}
+
+function _intercept(func : Function)
+{
+    return (req: any, res: any, next: any) => {
+        console.log(`INTERCEPTED req.activeTx?.timeoutSent '${req.mswTx?.timeoutSent}'`)
+        if (!req.mswTx?.timeoutSent)
+        {
+            func(req, res, next)
+        }
     }
 }

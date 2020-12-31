@@ -109,7 +109,7 @@ function pad(n : number, digits : number) : string {
 }
 
 export function transaction(conf : Configuration, logger: Logger){
-    return async (req : any, res : any, next : any)  => {
+    return (req : any, res : any, next : any)  => {
         const timestamp = new Date()
         let tx : TransactionObject
         const timeout = conf.transaction?.timeout || DEFAULT_TX_TIMEOUT
@@ -136,6 +136,7 @@ export function transaction(conf : Configuration, logger: Logger){
         }
 
         const mswTx = new MSWTransation(tx)
+        req.mswTx = mswTx
     
         res.end = wrap(
             res.end, 

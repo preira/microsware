@@ -48,11 +48,7 @@ export class MSWService implements Service {
     //TODO: configure serve to:
     //this.server.use > auth > transaction
     // TODO: treat authorization (needs paths )
-    // this.server.use(authorization)
-      //TODO: log
-      //TODO: 
-
-    
+    // this.server.use(authorization)    
 
     // TODO: use configuration
     // TODO: add sanity routes

@@ -41,13 +41,18 @@ server
     .route(twoservices)
     .post(post(twoservices))
     .get(secondget(twoservices))
+
 //TODO: add API call to self to timexout
 const timeoutservices = '/test/timeout-services$'
 server
     .api()
     .route(timeoutservices)
     .post(post(timeoutservices))
-    .get(gettimeout(timeoutservices))
+    .get(gettimeout(timeoutservices), (rq : any, rs, nxt) => {
+        console.log(`SHOULD NEVER SHOW if timeout : '${rq.mswTx?.timeoutSent}'`)
+        const data = rq.query.data
+        rs.status(200).json({'echo': data})
+    })
 
 
 function get(url: string) {
@@ -65,10 +70,11 @@ function gettimeout(url: string) {
 
     return (req: any, res: any, next: any) => {
         const data = req.query.data
+        const hold = req.query.hold
         logger.info(data)
         setTimeout(() => {
-            res.status(200).json({'echo': data})
-        }, 6000)
+            next()
+        }, hold)
     }
 }
 
