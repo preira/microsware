@@ -1,9 +1,10 @@
 import nconf from 'nconf'
 import { Configuration } from './configuration/configuration'
-import { API } from './api/api'
-import { Logger, MSWLogger } from './log/logger'
+import { API, APIFactory, MSWAPIFactory } from './api/api'
+import { Logger, LoggerFactory, MSWLoggerFactory } from './log/logger'
 import { transaction } from './transaction/transaction'
-import { Fetch } from './fetch/fetch'
+import { Fetch, FetchFactory, MSWFetchFactory } from './fetch/fetch'
+import { Server } from 'http'
 
 /* TODO: 
   consider to export an interface as a contract for
@@ -18,7 +19,7 @@ export interface Service {
   api() : API
   fetch() : Fetch
   logger(namespace: string) : Logger
-  run() : void
+  run() : Server
 }
 
 export class MSWService implements Service {
@@ -26,8 +27,15 @@ export class MSWService implements Service {
   config : Configuration
   server : API
   NODE_ENV : string
+  private _logger : Logger
+  private loggerFactory : LoggerFactory
+  private fetchFactory : FetchFactory
 
-  constructor(conf: Configuration, logger?: any) {
+  constructor(conf: Configuration, 
+    apiFactory? : APIFactory, 
+    fetchFactory? : FetchFactory, 
+    loggerFactory?: LoggerFactory) 
+  {
     this.config = conf
     // Read configurations
     if (conf && conf.node && conf.node.environment)
@@ -42,36 +50,67 @@ export class MSWService implements Service {
       process.title = `${this.NODE_ENV}`.toUpperCase()
     }
 
-    this.server = new API(this.config, this.logger('microsware-api'))
+    if (loggerFactory)
+    {
+      this.loggerFactory = loggerFactory
+    }
+    else
+    {
+      this.loggerFactory = new MSWLoggerFactory()
+    }
+    this._logger = this.logger('microsware-core')
+
+    if (apiFactory)
+    {
+      this.server = apiFactory.api(this.config, this.logger('microsware-api'))
+    }
+    else
+    {
+      this.server = new MSWAPIFactory().api(this.config, this.logger('microsware-api'))
+    }
     
     this.server.use(transaction(conf, this.logger('microsware-tx')))
+
+    if (fetchFactory)
+    {
+      this.fetchFactory = fetchFactory
+    }
+    else
+    {
+      this.fetchFactory = new MSWFetchFactory()
+    }
+    
     //TODO: configure serve to:
     //this.server.use > auth > transaction
     // TODO: treat authorization (needs paths )
     // this.server.use(authorization)    
 
     // TODO: use configuration
-    // TODO: add sanity routes
+      // TODO: add sanity routes
   }
 
-  api() : API {
+  api() : API 
+  {
     return this.server
   }
 
-  async initBatch(worker : () => void) {
+  async initBatch(worker : () => void) 
+  {
     // TODO: initialize batch service 
     // TODO: add to interface
   }
 
-  logger(namespace: string) : Logger {
-    return new MSWLogger(namespace, this.config.log)
+  logger(namespace: string) : Logger 
+  {
+    return this.loggerFactory.logger(namespace, this.config.log)
   }
 
-  fetch() : Fetch {
+  fetch(headers? : {key:string, value:string}[]) : Fetch {
     // TODO: cache fetch object for different targets
     // TODO: configure from configuration object
+    this._logger.traceDeferred(()=>`FETCH : '${headers}'`)
 
-    return new Fetch(this.logger('microsware-fetch'))
+    return this.fetchFactory.fetch(this.logger('microsware-fetch'), headers)
   }
 
   /*
@@ -96,7 +135,7 @@ export class MSWService implements Service {
     //TODO: log and update sanity status
   }
 
-  run() {
-    this.server.run()
+  run() : Server {
+    return this.server.run()
   }
 }

@@ -4,9 +4,43 @@ import express, { IRoute, Express } from 'express'
 // import { ParamsDictionary, Query } from "express-serve-static-core";
 import bodyParser from 'body-parser'
 import { RequestHandler } from "express-serve-static-core"
+import { Server } from "http";
 
 
-export class API {
+export interface APIFactory 
+{
+    api(conf: Configuration, logger: Logger) : API
+}
+
+export interface API 
+{
+    use(middleware : any) : API
+    route(path : string) : APIRoute
+    run() : Server
+}
+
+export interface APIRoute 
+{
+    all(...handlers: RequestHandler[]): APIRoute
+    post(...handlers: RequestHandler[]): APIRoute
+    put(...handlers: RequestHandler[]): APIRoute 
+    delete(...handlers: RequestHandler[]): APIRoute 
+    patch(...handlers: RequestHandler[]): APIRoute 
+    options(...handlers: RequestHandler[]): APIRoute 
+    head(...handlers: RequestHandler[]): APIRoute 
+    get(...handlers: RequestHandler[]): APIRoute 
+}
+
+export class MSWAPIFactory implements APIFactory 
+{
+    api(conf: Configuration, logger: Logger) : API
+    {
+        return new MSWAPI(conf, logger)
+    }
+}
+
+export class MSWAPI implements API 
+{
     server : Express
     config: Configuration
     logger : Logger
@@ -54,23 +88,24 @@ export class API {
         })
     }
 
-    use(middleware: any) {
+    use(middleware: any) : API {
         this.server.use(middleware)
+        return this
     }
 
     route(path: string) {
         return new MSWRoute(path, this.server, this.logger)
     }
 
-    run() {
+    run() : Server {
         // rest of the code remains same
         if (!this.config.server.hostname)
             this.config.server.hostname = 'localhost'
 
-        this.server.listen(this.config.server.httpport, this.config.server.hostname, () => {
+        return this.server.listen(this.config.server.httpport, this.config.server.hostname, () => {
             this.logger.info(`⚡️ [server]: Server now is ⚡️ running ⚡️ at https://${this.config.server.hostname}:${this.config.server.httpport}`);
         })
-      }
+    }
     
 }
 
@@ -78,7 +113,8 @@ export class API {
  * Wrapper for Express IRoute to eventually intercept method's 
  * call has needed and simplify route implementation
  */
-export class MSWRoute {
+export class MSWRoute implements APIRoute
+{
     route: IRoute
     logger: Logger
     // Request<ParamsDictionary, any, any, QueryString.ParsedQs>
@@ -87,49 +123,57 @@ export class MSWRoute {
         this.route = server.route(path)
     }
 
-    all(...handlers: RequestHandler[]): MSWRoute {
+    all(...handlers: RequestHandler[]): APIRoute 
+    {
         this.logger.info(`Adding route handler 'ALL' for '${this.route.path}'`)
         this.route = this.route.all(intercept(handlers))
         return this
     }
     
-    post(...handlers: RequestHandler[]): MSWRoute {
+    post(...handlers: RequestHandler[]): APIRoute 
+    {
         this.logger.info(`Adding route handler 'POST' for '${this.route.path}'`)
         this.route = this.route.post(intercept(handlers))
         return this
     }
     
-    put(...handlers: RequestHandler[]): MSWRoute {
+    put(...handlers: RequestHandler[]): APIRoute 
+    {
         this.logger.info(`Adding route handler 'PUT' for '${this.route.path}'`)
         this.route = this.route.put(intercept(handlers))
         return this
     }
     
-    delete(...handlers: RequestHandler[]): MSWRoute {
+    delete(...handlers: RequestHandler[]): APIRoute 
+    {
         this.logger.info(`Adding route handler 'DELETE' for '${this.route.path}'`)
         this.route = this.route.delete(intercept(handlers))
         return this
     }
     
-    patch(...handlers: RequestHandler[]): MSWRoute {
+    patch(...handlers: RequestHandler[]): APIRoute 
+    {
         this.logger.info(`Adding route handler 'PATCH' for '${this.route.path}'`)
         this.route = this.route.patch(intercept(handlers))
         return this
     }
     
-    options(...handlers: RequestHandler[]): MSWRoute {
+    options(...handlers: RequestHandler[]): APIRoute 
+    {
         this.logger.info(`Adding route handler 'OPTION' for '${this.route.path}'`)
         this.route = this.route.options(intercept(handlers))
         return this
     }
 
-    head(...handlers: RequestHandler[]): MSWRoute {
+    head(...handlers: RequestHandler[]): APIRoute 
+    {
         this.logger.info(`Adding route handler 'HEAD' for '${this.route.path}'`)
         this.route = this.route.head(intercept(handlers))
         return this
     }
 
-    get(...handlers: RequestHandler[]): MSWRoute {
+    get(...handlers: RequestHandler[]): APIRoute 
+    {
         this.logger.info(`Adding route handler 'GET' for '${this.route.path}'`)
         this.route = this.route.get(intercept(handlers))
         return this

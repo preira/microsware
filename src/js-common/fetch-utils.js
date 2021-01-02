@@ -1,4 +1,5 @@
 'use strict'
+const fetch = require('node-fetch')
 
 /**
  * Takes a Request Options object 
@@ -13,7 +14,7 @@
 export function promiseRequest(logger) {
     return (options) => {
         return new Promise((resolve, reject) => {
-            request(options, (err, resp, body) => {
+            http.request(options, (err, resp, body) => {
                 logger.traceDeferred('RESPONSE {\'err\':%o, \'statusCode\':%o, \'body\':%o}', 
                 err, resp && resp.statusCode, body && '{...obj...}' || 'empty')// && body.length)
 

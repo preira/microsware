@@ -9,6 +9,18 @@ export interface Logger {
     traceDeferred(callback: () => string) : void
 }
 
+export interface LoggerFactory {
+    logger(namespace : string, conf? : LogConfig) : Logger
+}
+
+export class MSWLoggerFactory implements LoggerFactory {
+
+    logger(namespace : string, conf? : LogConfig) : Logger 
+    { 
+        return new MSWLogger(namespace, conf) 
+    }
+}
+
 export class MSWLogger implements Logger{
     logger : Console
     namespace : string
