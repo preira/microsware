@@ -21,14 +21,49 @@ export const DEFAULT_TX_TIMEOUT = 5*60*1000
  * 
  * TransationObject should go in the request and response header
  */
-export interface Transaction {
+export interface Transaction 
+{
+    availableTimeout() : number
+    getRequestHeader() : {[k: string]: any}
+    printTimeoutMsg() : string
 }
 
-export class MSWTransation {
+export interface TransactionFactory 
+{
+    defaultTxObject(conf : Configuration, timestamp : Date, timeout : number) : TransactionObject
+    transaction(conf : Configuration, logger: Logger) : (req: any, res: any, next: any) => void
+}
+
+export class MSWTransactionFactory implements TransactionFactory
+{
+    defaultTxObject(conf : Configuration, timestamp : Date, timeout : number) : TransactionObject
+    {
+        return MSWTransactionFactory._defaultTxObject(conf, timestamp, timeout)
+    }
+
+    transaction(conf : Configuration, logger: Logger) : (req: any, res: any, next: any) => void
+    {
+        return transaction(conf, logger)
+    }
+
+    static _defaultTxObject(conf : Configuration, timestamp : Date, timeout : number = DEFAULT_TX_TIMEOUT) : TransactionObject
+    {
+        return {
+            sender: `${conf.service.name}-${conf.service.uuid}`,
+            receiver: `${conf.service.name}-${conf.service.uuid}`,
+            startTime: date2string(timestamp),
+            availableTimeout : timeout
+        }
+
+    }
+}
+
+export class MSWTransaction {
     private originalTimeout : number
     tx : TransactionObject
     receptionTimestamp : Date
     timeoutSent : boolean = false
+    static HEADER_FIELD_NAME : string = 'MSWTransaction'
 
     constructor(obj : TransactionObject) {
         this.originalTimeout = obj.availableTimeout
@@ -40,7 +75,7 @@ export class MSWTransation {
     availableTimeout(date : Date = new Date()) : number {
         const available = this.tx.availableTimeout 
             + this.receptionTimestamp.getTime() 
-            - new Date().getTime()
+            - date.getTime()
         if (available < 0) return 0 //throw new TimeoutError(this.printTimeoutMsg(this.tx, new Date()))
         return available
     }
@@ -52,11 +87,11 @@ export class MSWTransation {
             `${timestamp.getTime()-this.receptionTimestamp.getTime()}`
     }
 
-    getTx2Request(to: string) : TransactionObject{
+    getTx2Request(to?: string) : TransactionObject{
         const timestamp = new Date()
         return {
             sender: this.tx.receiver,
-            receiver: to,
+            receiver: to || '',
             startTime: this.tx.startTime,
             receivedAt: '',
             respondedAt: '',
@@ -71,6 +106,13 @@ export class MSWTransation {
         this.tx.availableTimeout = this.availableTimeout(timestamp)
         this.tx.respondedAt = date2string(timestamp)
         return this.tx
+    }
+
+    getRequestHeader() : {[k: string]: any}
+    {
+        const header : {[k: string]: any} = {}
+        header[MSWTransaction.HEADER_FIELD_NAME] = JSON.stringify(this.getTx2Request())
+        return header
     }
 
 }
@@ -114,7 +156,7 @@ export function transaction(conf : Configuration, logger: Logger){
         let tx : TransactionObject
         const timeout = conf.transaction?.timeout || DEFAULT_TX_TIMEOUT
 
-        const mswTxHeader = req.header('MSWTransaction')
+        const mswTxHeader = req.header(MSWTransaction.HEADER_FIELD_NAME)
         if (mswTxHeader)
         {
             tx = JSON.parse(mswTxHeader)
@@ -127,15 +169,16 @@ export function transaction(conf : Configuration, logger: Logger){
         }
         else
         {
-            tx = {
-                sender: `${conf.service.name}-${conf.service.uuid}`,
-                receiver: `${conf.service.name}-${conf.service.uuid}`,
-                startTime: date2string(timestamp),
-                availableTimeout : timeout
-            }
+            tx = MSWTransactionFactory._defaultTxObject(conf, timestamp, timeout)
+            // tx = {
+            //     sender: `${conf.service.name}-${conf.service.uuid}`,
+            //     receiver: `${conf.service.name}-${conf.service.uuid}`,
+            //     startTime: date2string(timestamp),
+            //     availableTimeout : timeout
+            // }
         }
 
-        const mswTx = new MSWTransation(tx)
+        const mswTx = new MSWTransaction(tx)
         req.mswTx = mswTx
     
         res.end = wrap(
@@ -145,7 +188,7 @@ export function transaction(conf : Configuration, logger: Logger){
                 if (mswTxHeader && !res.writableEnded && !res.writableFinished)
                 {
                     const txStr = JSON.stringify(mswTx.getTx2Respond())
-                    res.setHeader('MSWTransaction', txStr)
+                    res.setHeader(MSWTransaction.HEADER_FIELD_NAME, txStr)
                     logger.traceDeferred(() => `Writing transation to header ${txStr}`)
                 }
             })

@@ -1,65 +1,67 @@
 
-// import { promiseRequest } from '../js-common/fetch-utils'
 import { Logger } from '../log/logger'
-import { Request } from 'node-fetch'
 import { Agent } from 'http'
+import { HttpError } from '../exception/exception'
 
-export interface FetchFactory 
+export interface RequestFactory 
 {
-    fetch(logger : Logger, headers? : {key:string, value:string}[]) : Fetch
+    fetch(logger : Logger, headers? : {[k: string]: any}[]) : Request
 }
 
-export interface Fetch 
+export interface Request 
 {
-    get(url : string) : Promise<Body>
-    post(url : string, content : JSON | string) : Promise<Body>
+    addHeaders(headers? : {[k: string]: any}) : void
+    get(url : string, timeout? : number) : Promise<Response>
+    post(url : string, content : JSON | string, timeout? : number) : Promise<Response>
 }
 
-export class MSWFetchFactory implements FetchFactory 
+export class MSWRequestFactory implements RequestFactory 
 {
-    fetch(logger : Logger, headers? : {key:string, value:string}[]) : Fetch
+    fetch(logger : Logger, headers? : {[k: string]: any}[]) : Request
     {
-        return new MSWFetch(logger, headers)
+        return new MSWRequest(logger, headers)
     }
 }
 
-export class MSWFetch implements Fetch {
+export class MSWRequest implements Request {
 
     private headers : {[k: string]: any} = {
         'Content-Type': 'application/json'
     }
     logger : Logger
-    // request : Function
 
     constructor(logger : Logger, headers? : {[k: string]: any})
     {
         this.logger = logger
         this.logger.traceDeferred(()=>`Building FETCH with headers : '${headers}'`)
+        this.addHeaders(headers)
+    }
+    
+    addHeaders(headers? : {[k: string]: any})
+    {
         if (headers)
         {
-            for(let prop : string in headers)
+            for(const prop in headers)
             {
                 this.headers[prop] = headers[prop]
-                this.headers.set(item.key, item.value)
-            })
+            }
         }
-        // this.request = promiseRequest(logger)
     }
 
-    async get(url : string) : Promise<Body>
+    async get(url : string, timeout? : number) : Promise<Response>
     {
         this.logger.traceDeferred(()=>`GET : '${url}'`)
         try 
         {
             const options : Options = {
                 method : 'GET',
-                // url : url,
                 headers: this.headers,
+                timeout: timeout || 0, // TODO: should default to configuration timeout before defaulting to OS
                 json: true
             }
-            const res :  {code : number, body : Body} = await this.request(url, options)
+            const res : Response = await this._do(url, options)
             // TODO: what if error code
-            return res.body
+            return res
         }
         catch(e)
         {
@@ -68,71 +70,83 @@ export class MSWFetch implements Fetch {
         }
     }
 
-    async post(url : string, content : JSON | string) : Promise<Body>
+    async post(url : string, content : JSON | string, timeout? : number) : Promise<Response>
     {
         this.logger.traceDeferred(()=>`POST : '${url}'`)
         const options : Options = {
             method : 'POST',
-            // url : url,
             body : content,
+            timeout: timeout || 0, // TODO: should default to configuration timeout before defaulting to OS
             headers: this.headers,
             json: true
         }
-        const res :  {code : number, body : Body} = await this.request(url, options)
+        const res : Response = await this._do(url, options)
         // TODO: what if error code
-        return res.body
-
+        return res
     }
 
-    request(url : string, options : Options) {
-        
-        const rq = new Request(url, options)
-        return (options) => {
-            return new Promise((resolve, reject) => {
-                request(options, (err, resp, body) => {
-                    logger.traceDeferred('RESPONSE {\'err\':%o, \'statusCode\':%o, \'body\':%o}', 
-                    err, resp && resp.statusCode, body && '{...obj...}' || 'empty')// && body.length)
-    
-                    let statusCode = err && 500 || resp.statusCode
-                    let errCode = 500
-                    switch (statusCode) {
-                        case 200 :
-                        case 201 :
-                            //If no valid results, change status code to 404 not found
-                            statusCode = body && statusCode || 404
-                            resolve({code:statusCode, body:body})
-                            break
-                        case 401 :
-                        case 403 :
-                        case 404 :
-                            errCode = statusCode
-                        default :
-                            logger.error(`Failing due to response code '${resp && resp.statusCode}' or err '${err}'`)
-                            err = err || new Error(`Failing due to response code '${resp && resp.statusCode}' or err '${err}'`)
-                            err.code = errCode
-                            reject(err)
-                            break
-                    }
-                })
-            })
+    async _do(url : string, options : Options) {
+        try
+        {
+            const resp = await fetch(url, options)
+            const body = await resp?.json()
+            const headers = resp?.headers
+            this.logger.traceDeferred(() => 
+                `RESPONSE {\'statusCode\':${resp?.status}, \'body\':${body}}`)
+
+            let statusCode = resp.status
+            let errCode = 500
+            switch (statusCode) {
+                case 200 :
+                case 201 :
+                    //If no valid results, change status code to 404 not found
+                    statusCode = body && statusCode || 404
+                    return {code : statusCode, body : body, headers : headers}
+                case 401 :
+                case 403 :
+                case 404 :
+                    errCode = statusCode
+                default :
+                    this.logger.error(`Failing due to response code '${resp.status}'`)
+                    const err = new HttpError(`Failing due to response code '${resp.status}'`)
+                    err.code = errCode
+                    throw err
+                    // break
+            }
+
+        }
+        catch (e)
+        {
+            // throw 500
+            throw new HttpError(e.message)
         }
     }
+}
+
+export interface Response 
+{
+    code : number 
+    body : Body
+    headers : Headers
 }
 
 interface Options {
     // These properties are part of the Fetch Standard
     method: string      // http method
-    headers: { string: string}         // request headers. format is the identical to that accepted by the Headers constructor (see below)
-    body: any           // request body. can be null, a string, a Buffer, a Blob, or a Node.js Readable stream
-    redirect: 'follow'| 'manual'| 'error'    // 'follow', set to `manual` to extract redirect headers, `error` to reject redirect
-    signal: any         // pass an instance of AbortSignal to optionally abort requests
+    headers?: {[k: string]: any}         // request headers. format is the identical to that accepted by the Headers constructor (see below)
+    body?: any           // request body. can be null, a string, a Buffer, a Blob, or a Node.js Readable stream
+    redirect?: 'follow'| 'manual'| 'error'    // 'follow', set to `manual` to extract redirect headers, `error` to reject redirect
+    signal?: any         // pass an instance of AbortSignal to optionally abort requests
  
     // The following properties are node-fetch extensions
-    follow: number         // maximum redirect count. 0 to not follow redirect
-    timeout: number         // req/res timeout in ms, it resets on redirect. 0 to disable (OS limit applies). Signal is recommended instead.
-    compress: boolean,     // support gzip/deflate content encoding. false to disable
-    size: number,            // maximum response body size in bytes. 0 to disable
-    agent: Agent | ((parsedUrl: URL) => Agent) | undefined         // http(s).Agent instance or function that returns an instance (see documentation)
+    follow?: number         // maximum redirect count. 0 to not follow redirect
+    timeout?: number         // req/res timeout in ms, it resets on redirect. 0 to disable (OS limit applies). Signal is recommended instead.
+    compress?: boolean     // support gzip/deflate content encoding. false to disable
+    size?: number            // maximum response body size in bytes. 0 to disable
+    agent?: Agent | ((parsedUrl: URL) => Agent)         // http(s).Agent instance or function that returns an instance (see documentation)
+
+    // Custom properties
+    json?: boolean
 }
 
 /*

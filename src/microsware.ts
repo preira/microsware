@@ -2,38 +2,45 @@ import nconf from 'nconf'
 import { Configuration } from './configuration/configuration'
 import { API, APIFactory, MSWAPIFactory } from './api/api'
 import { Logger, LoggerFactory, MSWLoggerFactory } from './log/logger'
-import { transaction } from './transaction/transaction'
-import { Fetch, FetchFactory, MSWFetchFactory } from './fetch/fetch'
+import { MSWTransaction, Transaction, transaction } from './transaction/transaction'
+import { RequestFactory, MSWRequestFactory, Response } from './fetch/fetch'
 import { Server } from 'http'
+import { TimeoutError } from './exception/exception'
 
 /* TODO: 
   consider to export an interface as a contract for
   building a service in three layers:
     + api
     + business
-    + data access
+    + data access : fetch, db
 
   Organise error handling here!
 */
 export interface Service {
   api() : API
-  fetch() : Fetch
+  fetch() : Request
   logger(namespace: string) : Logger
   run() : Server
 }
 
-export class MSWService implements Service {
+export interface Request
+{
+  get(url : string, req : any, headers? : {[k: string]: any}[]) : Promise<Response>
+  post(url : string, content : JSON | string, headers? : {[k: string]: any}[]) : Promise<Response>
+}
+
+export class MSWService implements Service, Request {
 
   config : Configuration
   server : API
   NODE_ENV : string
   private _logger : Logger
   private loggerFactory : LoggerFactory
-  private fetchFactory : FetchFactory
+  private fetchFactory : RequestFactory
 
   constructor(conf: Configuration, 
     apiFactory? : APIFactory, 
-    fetchFactory? : FetchFactory, 
+    fetchFactory? : RequestFactory, 
     loggerFactory?: LoggerFactory) 
   {
     this.config = conf
@@ -77,7 +84,7 @@ export class MSWService implements Service {
     }
     else
     {
-      this.fetchFactory = new MSWFetchFactory()
+      this.fetchFactory = new MSWRequestFactory()
     }
     
     //TODO: configure serve to:
@@ -105,12 +112,44 @@ export class MSWService implements Service {
     return this.loggerFactory.logger(namespace, this.config.log)
   }
 
-  fetch(headers? : {key:string, value:string}[]) : Fetch {
-    // TODO: cache fetch object for different targets
+  fetch() : Request 
+  {
+    return this
+  }
+
+  async get(url : string, req : any, headers? : {[k: string]: any}[]) : Promise<Response>
+  {
+    // TODO: should we cache fetch object for different targets ?
     // TODO: configure from configuration object
     this._logger.traceDeferred(()=>`FETCH : '${headers}'`)
 
-    return this.fetchFactory.fetch(this.logger('microsware-fetch'), headers)
+    const fetch = this.fetchFactory.fetch(this.logger('microsware-fetch'), headers)
+    
+    // TODO: set request timeout
+    const tx : Transaction = req.mswTx
+    
+
+    fetch.addHeaders(tx.getRequestHeader())
+
+
+    const res = await fetch.get(url, tx.availableTimeout())
+
+    // TODO: integrate tx from response. Evaluate timeout
+    if (tx.availableTimeout() <= 0)
+    {
+      throw new TimeoutError(tx.printTimeoutMsg())
+    }
+
+    return res
+  }
+
+  async post(url : string, content : JSON | string, headers? : {[k: string]: any}[]) : Promise<Response>
+  {
+    // TODO : merge logic with get
+    const fetch = this.fetchFactory.fetch(this.logger('microsware-fetch'), headers)
+    fetch.addHeaders()
+    const res = await this.fetch().post(url, content)
+    return res
   }
 
   /*

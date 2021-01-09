@@ -85,7 +85,9 @@ function secondget(url: string) {
         const data = req.query.data
         res.setHeader('Yet-another-header', 'header value')
         logger.info(data)
-        const response = await server.fetch().get('http://localhost:3000/test?origin=secondget')
+        const response = await server
+            .fetch()
+            .get('http://localhost:3000/test?origin=secondget', req)
         res.status(200).json({'echo': data, 'second-service-response' : response})
     }
 }
