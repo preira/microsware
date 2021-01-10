@@ -2,6 +2,7 @@
 import { Logger } from '../log/logger'
 import { Agent } from 'http'
 import { HttpError } from '../exception/exception'
+import fetch, { Headers } from 'node-fetch'
 
 export interface RequestFactory 
 {
@@ -85,7 +86,7 @@ export class MSWRequest implements Request {
         return res
     }
 
-    async _do(url : string, options : Options) {
+    async _do(url : string, options : Options) : Promise<Response> {
         try
         {
             const resp = await fetch(url, options)
